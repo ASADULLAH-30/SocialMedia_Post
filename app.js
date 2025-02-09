@@ -1,49 +1,84 @@
-// Signup User
+import { auth } from "./firebase.js";
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signInWithPopup, 
+    GoogleAuthProvider 
+} from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
+
+// ✅ Signup Function
 function signupUser() {
-    let name = document.getElementById("signup-name").value;
-    let email = document.getElementById("signup-email").value;
-    let password = document.getElementById("signup-password").value;
+    console.log("✅ Signup button clicked!"); // Debugging ke liye
 
-    auth.createUserWithEmailAndPassword(email, password)
+    let name = document.getElementById("signup-name").value.trim();
+    let email = document.getElementById("signup-email").value.trim();
+    let password = document.getElementById("signup-password").value.trim();
+
+    if (!name || !email || !password) {
+        alert("❌ Please enter name, email, and password.");
+        return;
+    }
+
+    createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            let user = userCredential.user;
-            return user.updateProfile({ displayName: name });
+            const user = userCredential.user;
+            alert("✅ Signup Successful! 🎉");
+            console.log("User Created:", user);
+            window.location.href = "dashboard.html"; // Redirect after signup
         })
-        .then(() => {
-            alert("Signup Successful! Redirecting to Login...");
-            window.location.href = "index.html";
-        })
-        .catch(error => alert(error.message));
+        .catch((error) => {
+            alert("❌ Signup Failed: " + error.message);
+            console.error("Signup Error:", error);
+        });
 }
 
-// Login User
+// ✅ Login Function
 function loginUser() {
-    let email = document.getElementById("login-email").value;
-    let password = document.getElementById("login-password").value;
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value.trim();
 
-    auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-            alert("Login Successful!");
-            window.location.href = "dashboard.html";
+    if (!email || !password) {
+        alert("❌ Please enter both email and password.");
+        return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            alert("✅ Login Successful! 🎉");
+            console.log("Logged in User:", user);
+            window.location.href = "dashboard.html"; // Redirect after login
         })
-        .catch(error => alert(error.message));
+        .catch((error) => {
+            alert("❌ Login Failed: " + error.message);
+            console.error("Login Error:", error);
+        });
 }
 
-// Google Login
+// ✅ Google Login Function
 function loginWithGoogle() {
-    let provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-        .then(() => {
-            alert("Google Login Successful!");
-            window.location.href = "dashboard.html";
+    const provider = new GoogleAuthProvider();
+
+    signInWithPopup(auth, provider)
+        .then((result) => {
+            const user = result.user;
+            alert("✅ Google Login Successful! 🎉");
+            console.log("Google User:", user);
+            window.location.href = "dashboard.html"; // Redirect after login
         })
-        .catch(error => alert(error.message));
+        .catch((error) => {
+            alert("❌ Google Login Failed: " + error.message);
+            console.error("Google Login Error:", error);
+        });
 }
 
-// Logout User
-function logoutUser() {
-    auth.signOut().then(() => {
-        alert("Logged Out Successfully!");
-        window.location.href = "index.html";
-    });
-}
+// ✅ Add Event Listeners AFTER DOM is Loaded
+document.addEventListener("DOMContentLoaded", () => {
+    const signupBtn = document.getElementById("signup-btn");
+    const loginBtn = document.getElementById("login-btn");
+    const googleLoginBtn = document.getElementById("google-login-btn");
+
+    if (signupBtn) signupBtn.addEventListener("click", signupUser);
+    if (loginBtn) loginBtn.addEventListener("click", loginUser);
+    if (googleLoginBtn) googleLoginBtn.addEventListener("click", loginWithGoogle);
+});
