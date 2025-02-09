@@ -1,115 +1,49 @@
-// ✅ Import Firebase modules
-import { auth, db } from "./firebase.js";
-import { 
-    onAuthStateChanged, 
-    signOut 
-} from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
-import { 
-    collection, 
-    addDoc, 
-    onSnapshot, 
-    query, 
-    orderBy, 
-    doc, 
-    deleteDoc, 
-    updateDoc 
-} from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MySocialApp</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-// ✅ Check if user is logged in
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // ✅ Show user info
-        document.getElementById("user-name").innerText = user.displayName || "User";
-        document.getElementById("user-email").innerText = user.email;
-        document.getElementById("user-photo").src = user.photoURL || "default-avatar.png"; // Fallback image
-    } else {
-        // ❌ No user logged in, redirect to login
-        window.location.href = "index.html";
-    }
-});
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <h2>Welcome to Dashboard 🎉</h2>
+            <img id="user-photo" class="rounded-circle mt-3" width="100" alt="Profile Photo">
+            <h4 id="user-name" class="mt-2"></h4>
+            <p id="user-email"></p>
+            <button id="logout-btn" class="btn btn-danger mt-3">Logout</button>
+        </div>
+    </div>
 
-// ✅ Logout Function
-document.getElementById("logout-btn").addEventListener("click", () => {
-    signOut(auth)
-        .then(() => {
-            alert("Logged out successfully!");
-            window.location.href = "index.html";
-        })
-        .catch((error) => {
-            alert("Logout Failed: " + error.message);
-            console.error("Logout Error:", error);
-        });
-});
+    <hr>
 
-// ✅ Create Post Function
-document.getElementById("post-btn").addEventListener("click", async () => {
-    const postContent = document.getElementById("post-content").value.trim();
-    if (postContent === "") {
-        alert("Post cannot be empty!");
-        return;
-    }
+    <!-- Post Creation Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <textarea id="post-content" class="form-control" placeholder="What's on your mind?" rows="3"></textarea>
+            <button class="btn btn-primary mt-2 w-100" id="post-btn">Post</button>
+        </div>
+    </div>
 
-    const user = auth.currentUser;
-    if (user) {
-        await addDoc(collection(db, "posts"), {
-            content: postContent,
-            userId: user.uid,
-            userName: user.displayName || "Anonymous",
-            timestamp: new Date()
-        });
-        document.getElementById("post-content").value = "";
-    }
-});
+    <hr>
 
-// ✅ Fetch & Display Posts
-const postsList = document.getElementById("posts-list");
+    <!-- Posts Display Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h4 class="text-center">All Posts</h4>
+            <ul id="posts-list" class="list-group"></ul>
+        </div>
+    </div>
+</div>
 
-onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snapshot) => {
-    postsList.innerHTML = ""; // Clear existing posts
-    snapshot.forEach((doc) => {
-        const post = doc.data();
-        const postItem = document.createElement("li");
-        postItem.classList.add("list-group-item");
+<!-- Firebase SDK -->
+<script type="module" src="./firebase.js"></script>
+<script type="module" src="./dashboard.js"></script>
 
-        // 📝 Display post content
-        postItem.innerHTML = `
-            <strong>${post.userName}</strong>: ${post.content}
-            <br><small>${new Date(post.timestamp.seconds * 1000).toLocaleString()}</small>
-        `;
-
-        // 🔄 Edit & Delete options for post owner
-        if (auth.currentUser && auth.currentUser.uid === post.userId) {
-            const editBtn = document.createElement("button");
-            editBtn.innerText = "Edit";
-            editBtn.classList.add("btn", "btn-warning", "btn-sm", "mx-2");
-            editBtn.onclick = () => editPost(doc.id, post.content);
-
-            const deleteBtn = document.createElement("button");
-            deleteBtn.innerText = "Delete";
-            deleteBtn.classList.add("btn", "btn-danger", "btn-sm");
-            deleteBtn.onclick = () => deletePost(doc.id);
-
-            postItem.appendChild(editBtn);
-            postItem.appendChild(deleteBtn);
-        }
-
-        postsList.appendChild(postItem);
-    });
-});
-
-// ✅ Edit Post Function
-async function editPost(postId, oldContent) {
-    const newContent = prompt("Edit your post:", oldContent);
-    if (newContent && newContent !== oldContent) {
-        await updateDoc(doc(db, "posts", postId), {
-            content: newContent
-        });
-    }
-}
-
-// ✅ Delete Post Function
-async function deletePost(postId) {
-    if (confirm("Are you sure you want to delete this post?")) {
-        await deleteDoc(doc(db, "posts", postId));
-    }
-}
+</body>
+</html>
