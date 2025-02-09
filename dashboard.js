@@ -15,15 +15,23 @@ import {
     updateDoc 
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
-// ✅ Check if user is logged in
+// ✅ Function to Get Profile Picture Based on First Letter
+function getProfilePicture(name) {
+    if (!name) return "default-avatar.png"; // Fallback image
+
+    const firstLetter = name.charAt(0).toUpperCase();
+    return `avatars/${firstLetter}.png`; // Assumes images are in "avatars" folder (e.g., avatars/A.png)
+}
+
+// ✅ Check if user is logged in and set profile details
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // ✅ Show user info
         document.getElementById("user-name").innerText = user.displayName || "User";
         document.getElementById("user-email").innerText = user.email;
-        document.getElementById("user-photo").src = user.photoURL || "default-avatar.png"; // Fallback image
+
+        // ✅ Set Profile Picture Based on First Letter
+        document.getElementById("user-photo").src = user.photoURL || getProfilePicture(user.displayName);
     } else {
-        // ❌ No user logged in, redirect to login
         window.location.href = "index.html";
     }
 });
@@ -54,7 +62,7 @@ document.getElementById("post-btn").addEventListener("click", async () => {
         await addDoc(collection(db, "posts"), {
             content: postContent,
             userId: user.uid,
-            userName: user.displayName || "Anonymous",
+            userName: user.displayName || "Anonymous", // ✅ Ensure the username from signup is used
             timestamp: new Date()
         });
         document.getElementById("post-content").value = "";
@@ -71,8 +79,12 @@ onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snapsh
         const postItem = document.createElement("li");
         postItem.classList.add("list-group-item");
 
-        // 📝 Display post content
+        // ✅ Fetch Profile Picture Based on User's Name
+        const profilePic = getProfilePicture(post.userName);
+
+        // 📝 Display post content with Profile Picture
         postItem.innerHTML = `
+            <img src="${profilePic}" class="rounded-circle" width="40" height="40" alt="Profile">
             <strong>${post.userName}</strong>: ${post.content}
             <br><small>${new Date(post.timestamp.seconds * 1000).toLocaleString()}</small>
         `;
