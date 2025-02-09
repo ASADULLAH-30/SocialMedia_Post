@@ -14,21 +14,21 @@
         <div class="col-md-4">
             <h2 class="text-center">Login</h2>
             <div class="mb-3">
-                <input type="email" id="login-email" class="form-control" placeholder="Email">
+                <input type="email" id="login-email" class="form-control" placeholder="Email" required>
             </div>
             <div class="mb-3">
-                <input type="password" id="login-password" class="form-control" placeholder="Password">
+                <input type="password" id="login-password" class="form-control" placeholder="Password" required>
             </div>
-            <button class="btn btn-primary w-100" onclick="loginUser()">Login</button>
-            <button class="btn btn-danger w-100 mt-2" onclick="loginWithGoogle()">Login with Google</button>
+            <button id="login-btn" class="btn btn-primary w-100">Login</button>
+            <button id="google-login-btn" class="btn btn-danger w-100 mt-2">Login with Google</button>
             <p class="text-center mt-3">Don't have an account? <a href="signup.html">Sign Up</a></p>
         </div>
     </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-<script type="module" src="firebase.js"></script>
-<script type="module" src="app.js"></script>
+<!-- ✅ Firebase SDK (Module-Based) -->
+<script type="module" src="./firebase.js"></script>
+<script type="module" src="./app.js"></script> 
+
 </body>
 </html>
