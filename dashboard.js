@@ -2,7 +2,8 @@
 import { auth, db } from "./firebase.js";
 import { 
     onAuthStateChanged, 
-    signOut 
+    signOut, 
+    updateProfile
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 import { 
     collection, 
@@ -15,12 +16,12 @@ import {
     updateDoc 
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
-// ✅ Function to Get Profile Picture Based on First Letter
+// ✅ Default Profile Picture Function
 function getProfilePicture(name) {
-    if (!name) return "default-avatar.png"; // Fallback image
+    if (!name) return "./images/default-avatar.png";  // Ensure correct default path
 
     const firstLetter = name.charAt(0).toUpperCase();
-    return `avatars/${firstLetter}.png`; // Assumes images are in "avatars" folder (e.g., avatars/A.png)
+    return `./avatars/${firstLetter}.png`; // Ensure avatars are stored properly
 }
 
 // ✅ Check if user is logged in and set profile details
@@ -28,11 +29,13 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById("user-name").innerText = user.displayName || "User";
         document.getElementById("user-email").innerText = user.email;
+        
+        // ✅ Set Profile Picture (Use user.photoURL or default)
+        let profilePic = user.photoURL || getProfilePicture(user.displayName);
+        document.getElementById("user-photo").src = profilePic;
 
-        // ✅ Set Profile Picture Based on First Letter
-        document.getElementById("user-photo").src = user.photoURL || getProfilePicture(user.displayName);
     } else {
-        window.location.href = "index.html";
+        window.location.href = "index.html"; // Redirect to login if not logged in
     }
 });
 
@@ -62,7 +65,7 @@ document.getElementById("post-btn").addEventListener("click", async () => {
         await addDoc(collection(db, "posts"), {
             content: postContent,
             userId: user.uid,
-            userName: user.displayName || "Anonymous", // ✅ Ensure the username from signup is used
+            userName: user.displayName || "Anonymous", 
             timestamp: new Date()
         });
         document.getElementById("post-content").value = "";
@@ -77,20 +80,24 @@ onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snapsh
     snapshot.forEach((doc) => {
         const post = doc.data();
         const postItem = document.createElement("li");
-        postItem.classList.add("list-group-item");
+        postItem.classList.add("list-group-item", "d-flex", "align-items-start", "gap-2");
 
         // ✅ Fetch Profile Picture Based on User's Name
-        const profilePic = getProfilePicture(post.userName);
+        let profilePic = getProfilePicture(post.userName);
 
-        // 📝 Display post content with Profile Picture
+        // ✅ Display post content with Profile Picture
         postItem.innerHTML = `
             <img src="${profilePic}" class="rounded-circle" width="40" height="40" alt="Profile">
-            <strong>${post.userName}</strong>: ${post.content}
-            <br><small>${new Date(post.timestamp.seconds * 1000).toLocaleString()}</small>
+            <div class="post-content">
+                <strong>${post.userName}</strong>: ${post.content}
+                <br><small>${new Date(post.timestamp.seconds * 1000).toLocaleString()}</small>
+            </div>
         `;
 
         // 🔄 Edit & Delete options for post owner
         if (auth.currentUser && auth.currentUser.uid === post.userId) {
+            const actionsDiv = document.createElement("div");
+
             const editBtn = document.createElement("button");
             editBtn.innerText = "Edit";
             editBtn.classList.add("btn", "btn-warning", "btn-sm", "mx-2");
@@ -101,8 +108,9 @@ onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snapsh
             deleteBtn.classList.add("btn", "btn-danger", "btn-sm");
             deleteBtn.onclick = () => deletePost(doc.id);
 
-            postItem.appendChild(editBtn);
-            postItem.appendChild(deleteBtn);
+            actionsDiv.appendChild(editBtn);
+            actionsDiv.appendChild(deleteBtn);
+            postItem.appendChild(actionsDiv);
         }
 
         postsList.appendChild(postItem);
